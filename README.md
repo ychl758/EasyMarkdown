@@ -14,6 +14,8 @@ Windows 桌面 Markdown 编辑器。左侧树来自真实文件夹，正文直�
 
 安装版和便携版都未做代码签名，首次运行可能出现 SmartScreen 提示：点「更多信息」→「仍要运行」。
 
+> 从 0.4.x 升级：0.4.x 还没有更新检查，需要手动安装一次 0.5.0。之后的版本可以在应用内检查、下载并安装。
+
 安装版启动后会检查 GitHub Releases。发现新版本时，应用内会提示下载并启动安装程序；安装包会经过 SHA-512 校验。便携版会打开发布页，由你自己替换文件。
 
 ## 功能和交互
@@ -126,6 +128,26 @@ DESIGN-AUDIT.md   0.3 阶段的 unslop 审计历史
 - 安装版 / 便携版均未代码签名；首次运行可能触发 SmartScreen
 - 安装包为 per-user 安装（不需要管理员权限）
 - 没有云同步、版本历史、双链、全文搜索、多窗口
+
+## 发布新版本（维护者）
+
+安装版的自动更新依赖 Release 里的 `latest.yml` 和安装包，发布时都要上传：
+
+```bash
+npm version patch --no-git-tag-version
+npm run dist:win
+git add -A && git commit -m "EasyMarkdown x.y.z"
+git tag vx.y.z
+git push origin main --tags
+gh release create vx.y.z \
+  release/EasyMarkdown-Setup-x.y.z.exe \
+  release/EasyMarkdown-x.y.z-portable.exe \
+  release/latest.yml \
+  dist/EasyMarkdown.html \
+  --title "EasyMarkdown x.y.z" --notes-file release-notes.md
+```
+
+`latest.yml` 里的 SHA-512 由 electron-builder 生成，不要手改。便携版不会自动替换自身，只会在应用内提示并打开发布页。
 
 ## 许可
 

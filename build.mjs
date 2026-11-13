@@ -5,6 +5,7 @@ import path from 'node:path';
 const root = process.cwd();
 const outDir = path.join(root, 'dist');
 const outFile = path.join(outDir, 'EasyMarkdown.html');
+const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 
 await build({
   entryPoints: [path.join(root, 'src/editor-entry.js')],
@@ -42,6 +43,7 @@ const output = html
   .split('/*__MERMAID__*/').join(safeScript(mermaidCode))
   .split('/*__VENDOR__*/').join(safeScript(vendor))
   .split('/*__APP__*/').join(safeScript(app))
+  .split('__APP_VERSION__').join(pkg.version)
   .split('__INTER_WOFF2__').join(interB64);
 
 await mkdir(outDir, { recursive: true });

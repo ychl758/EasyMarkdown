@@ -4,7 +4,7 @@
 
   const { createEditor, renderMarkdown } = window.EasyMarkdownKit;
 
-  const VERSION = '0.5.0';
+  const VERSION = '__APP_VERSION__';
   const KEY_WORKSPACE = 'easymarkdown:workspace:v1';
   const KEY_ASSETS = 'easymarkdown:assets:v1';
   const KEY_TABS = 'easymarkdown:tabs:v1';

@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="EasyMarkdown — 一个不需要安装的单文件 Markdown 编辑器">
+<script>
+  (function () {
+    try {
+      var search = new URLSearchParams(location.search);
+      var param = search.get('theme');
+      var stored = localStorage.getItem('easymarkdown:theme');
+      var saved = stored ? JSON.parse(stored) : null;
+      var theme = param === 'dark' || param === 'light' ? param
+        : saved === 'dark' || saved === 'light' ? saved
+        : 'dark';
+      document.documentElement.dataset.theme = theme;
+    } catch (e) {}
+  })();
+</script>
+<title>EasyMarkdown · Markdown 编辑器</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233ef07c'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='800' font-family='Arial,sans-serif' text-anchor='middle' fill='%23041008'%3EE%3C/text%3E%3C/svg%3E">
+<style>/*__STYLES__*/</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- 顶栏 -->
+  <header class="appbar">
+    <button class="icon-btn" id="sidebarToggle" title="展开 / 收起侧栏" aria-label="切换侧栏">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M7.6 4v12"/></svg>
+    </button>
+
+    <div class="brand" title="EasyMarkdown">
+      <span class="brand-seal">E</span>
+      <span class="brand-name">Easy<span class="brand-name-accent">Markdown</span></span>
+    </div>
+
+    <div class="appbar-spacer"></div>
+
+    <div class="appbar-actions">
+      <button class="command-btn" id="searchPill" title="命令面板 (Ctrl P)" aria-label="打开命令面板">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="15" height="10" rx="2"/><path d="M5.2 8h.01M8 8h.01M10.8 8h.01M13.6 8h.01M5.2 11h.01M8 11h.01M10.8 11h.01M13.6 11h.01M6.6 13.4h6.8"/></svg>
+        <span class="command-label">命令</span>
+        <span class="command-kbd"><kbd>Ctrl</kbd><kbd>P</kbd></span>
+      </button>
+      <button class="tb-btn tb-primary" id="openBtn" title="打开本地 Markdown 文件">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H8l1.5 2h6A1.5 1.5 0 0 1 17 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"/></svg>
+        <span class="btn-label">打开</span>
+      </button>
+      <button class="tb-btn tb-secondary" id="exportBtn" title="导出">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5v8.5M6.7 8.8 10 12.1l3.3-3.3M4 14v2.2h12V14"/></svg>
+        <span class="btn-label">导出</span>
+        <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 8.2 3.5 3.5 3.5-3.5"/></svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换主题">
+        <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="3.3"/><path d="M10 2.2v1.8M10 16v1.8M2.2 10H4M16 10h1.8M4.5 4.5l1.3 1.3M14.2 14.2l1.3 1.3M15.5 4.5l-1.3 1.3M5.8 14.2l-1.3 1.3"/></svg>
+        <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16.4 12.1A6.7 6.7 0 0 1 7.9 3.6 6.8 6.8 0 1 0 16.4 12.1Z"/></svg>
+      </button>
+      <button class="icon-btn" id="helpBtn" title="快捷键与关于" aria-label="快捷键与关于">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M7.9 7.7a2.1 2.1 0 0 1 4.1.7c0 1.4-2.1 1.7-2.1 3"/><path d="M10 14.3h.01" stroke-width="2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 侧栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <button class="workspace-btn" id="workspaceBtn" title="切换工作区文件夹">
+        <span class="workspace-name" id="workspaceName">我的文档</span>
+        <svg class="workspace-chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 8.2 3.5 3.5 3.5-3.5"/></svg>
+      </button>
+      <button class="icon-btn small" id="newFileBtn" title="新建文件">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 4.5v11M4.5 10h11"/></svg>
+      </button>
+    </div>
+
+    <div class="sidebar-tabs" role="tablist">
+      <button class="sidebar-tab active" data-side-tab="files" role="tab" aria-selected="true">文件</button>
+      <button class="sidebar-tab" data-side-tab="outline" role="tab" aria-selected="false">大纲</button>
+    </div>
+
+    <div class="sidebar-body" id="sidebarFiles">
+      <label class="filter-box">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="9" cy="9" r="4.5"/><path d="m12.6 12.6 3.4 3.4"/></svg>
+        <input id="filterInput" placeholder="筛选文件…" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="tree" id="tree"></div>
+    </div>
+
+    <div class="sidebar-body hidden" id="sidebarOutline">
+      <div class="outline" id="outline"></div>
+    </div>
+
+    <div class="sidebar-foot" id="sidebarFoot"><span>7 个文件</span><span>数据仅存本机</span></div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- 主区域 -->
+  <main class="main">
+    <div class="tabbar">
+      <div class="tabs" id="tabs"></div>
+      <div class="mode-switch" id="modeSwitch">
+        <button class="seg" data-mode="split" title="分屏（编辑 + 预览）">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M10 4v12"/></svg>
+          <span class="seg-label">分屏</span>
+        </button>
+        <button class="seg" data-mode="editor" title="仅编辑">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 3.8 16.2 7.4 7.6 16l-4.1.7.7-4.1z"/><path d="m11.1 5.3 3.6 3.6"/></svg>
+          <span class="seg-label">编辑</span>
+        </button>
+        <button class="seg" data-mode="preview" title="仅预览">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10s2.8-4.5 7.5-4.5 7.5 4.5 7.5 4.5-2.8 4.5-7.5 4.5S2.5 10 2.5 10Z"/><circle cx="10" cy="10" r="2.2"/></svg>
+          <span class="seg-label">预览</span>
+        </button>
+        <button class="seg" data-mode="preview-edit" title="预览编辑：在渲染结果里直接修改">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.7 10s2.7-4.2 7.3-4.2c1.4 0 2.6.4 3.8 1"/><path d="M17.3 10s-2.7 4.2-7.3 4.2c-1.3 0-2.5-.3-3.6-.9"/><path d="m12.7 6.7 4.1 4.1-5.4 5.4-3.1.7.7-3.1z"/></svg>
+          <span class="seg-label">预览编辑</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="workspace mode-split" id="workspace">
+      <section class="pane pane-editor">
+        <div class="editor-bar" id="editorBar">
+          <button class="tool-btn text" data-action="h1" title="一级标题">H1</button>
+          <button class="tool-btn text" data-action="h2" title="二级标题">H2</button>
+          <button class="tool-btn text" data-action="h3" title="三级标题">H3</button>
+          <span class="tool-sep"></span>
+          <button class="tool-btn" data-action="bold" title="加粗 (Ctrl+B)">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.6h4a3.1 3.1 0 0 1 0 6.2h-4zM6.5 9.8h4.6a3.2 3.2 0 0 1 0 6.4H6.5z"/></svg>
+          </button>
+          <button class="tool-btn" data-action="italic" title="斜体 (Ctrl+I)">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.6h6.4M5.6 16.4H12M11.8 3.6 8.2 16.4"/></svg>
+          </button>
+          <button class="tool-btn" data-action="strike" title="删除线">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 10h10.8M12.7 6.2c-.5-1.5-1.8-2.5-3.6-2.5-1.9 0-3.4 1.1-3.4 2.7 0 1.1.6 1.8 1.7 2.3M7.3 13.8c.5 1.5 1.8 2.5 3.6 2.5 1.9 0 3.4-1.1 3.4-2.7 0-1.1-.6-1.8-1.7-2.3"/></svg>
+          </button>
+          <button class="tool-btn" data-action="code" title="行内代码 (Ctrl+E)">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.2 6.4-3.6 3.6 3.6 3.6M12.8 6.4l3.6 3.6-3.6 3.6"/></svg>
+          </button>
+          <span class="tool-sep"></span>
+          <button class="tool-btn" data-action="link" title="插入链接 (Ctrl+K)">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 11.7a3.2 3.2 0 0 0 4.5 0l2.1-2.1a3.2 3.2 0 1 0-4.5-4.5l-1 1"/><path d="M11.7 8.3a3.2 3.2 0 0 0-4.5 0l-2.1 2.1a3.2 3.2 0 1 0 4.5 4.5l1-1"/></svg>
+          </button>
+          <button class="tool-btn" data-action="image" title="插入图片">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="14" height="11" rx="2"/><circle cx="7.1" cy="8.2" r="1.1"/><path d="m4.4 14 4.3-4.3 3 3 1.9-1.9 3.1 3.1"/></svg>
+          </button>
+          <span class="tool-sep"></span>
+          <button class="tool-btn" data-action="quote" title="引用">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 6.3h4.4v4c0 2.4-1.4 3.8-3.8 4M11 6.3h4.4v4c0 2.4-1.4 3.8-3.8 4"/></svg>
+          </button>
+          <button class="tool-btn" data-action="ul" title="无序列表">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7.5 5.8h9M7.5 10h9M7.5 14.2h9"/><path d="M4 5.8h.01M4 10h.01M4 14.2h.01" stroke-width="2.4"/></svg>
+          </button>
+          <button class="tool-btn" data-action="ol" title="有序列表">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 5.8h8.5M8 10h8.5M8 14.2h8.5"/><text x="3" y="7.6" font-size="6.4" fill="currentColor" stroke="none" font-family="Segoe UI, sans-serif">1</text><text x="3" y="11.8" font-size="6.4" fill="currentColor" stroke="none" font-family="Segoe UI, sans-serif">2</text><text x="3" y="16" font-size="6.4" fill="currentColor" stroke="none" font-family="Segoe UI, sans-serif">3</text></svg>
+          </button>
+          <button class="tool-btn" data-action="task" title="任务清单">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="3.4" width="13.2" height="13.2" rx="3"/><path d="m6.9 10 2 2 4.2-4.2"/></svg>
+          </button>
+          <span class="tool-sep"></span>
+          <button class="tool-btn insert-btn" data-action="insert" title="插入">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 4.2v11.6M4.2 10h11.6"/></svg>
+            <span>插入</span>
+          </button>
+          <button class="tool-btn" data-action="mermaid" title="插入 Mermaid 流程图">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.5" width="5.2" height="4.2" rx="1.2"/><rect x="11.8" y="12.3" width="5.2" height="4.2" rx="1.2"/><path d="M8.2 5.6h2.6a1.6 1.6 0 0 1 1.6 1.6v5.1M12.4 14.4H9.8a1.6 1.6 0 0 1-1.6-1.6V7.8"/></svg>
+          </button>
+        </div>
+        <div class="editor-host" id="editorHost"></div>
+      </section>
+
+      <div class="splitter" id="splitter" title="拖动调整比例 · 双击还原"></div>
+
+      <section class="pane pane-preview">
+        <div class="preview-bar">
+          <div class="preview-label" id="previewLabel">预览</div>
+          <div class="preview-edit-hint" id="previewEditHint">点击正文直接改 · Enter 完成 · 双击复杂块改源码</div>
+          <div class="preview-tools">
+            <button class="icon-btn tiny" id="fontMinus" title="缩小正文字号">A−</button>
+            <span class="font-size" id="fontSizeLabel">100%</span>
+            <button class="icon-btn tiny" id="fontPlus" title="放大正文字号">A＋</button>
+          </div>
+        </div>
+        <div class="preview-scroll" id="previewScroll">
+          <article class="preview-page" id="previewPage"></article>
+        </div>
+      </section>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-card">
+          <div class="empty-mark">E</div>
+          <h2>还没有 Markdown 文件</h2>
+          <p>新建一个文件，或打开一个文件夹开始。</p>
+          <div class="empty-actions">
+            <button class="btn primary" id="emptyNewBtn">新建文件</button>
+            <button class="btn" id="emptyOpenBtn">打开文件夹</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="statusbar">
+      <div class="status-left">
+        <span class="status-item" id="statusFile">未打开文件</span>
+        <span class="status-item save-state" id="saveState"><span class="save-dot"></span><span id="saveText">已保存</span></span>
+      </div>
+      <div class="status-right">
+        <span class="status-item" id="statusCursor">第 1 行，第 1 列</span>
+        <span class="status-item" id="statusWords">0 字</span>
+        <span class="status-item hide-sm" id="statusLines">0 行</span>
+        <span class="status-item hide-sm">Markdown</span>
+        <span class="status-item hide-sm">UTF-8</span>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<input type="file" id="fileInput" accept=".md,.markdown,.mdown,.txt,text/markdown" multiple hidden>
+<input type="file" id="imageInput" accept="image/*" hidden>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ================= 示例文档 ================= -->
+
+<script type="text/markdown" id="demo-welcome" data-name="开始使用.md">
+# 开始使用
+
+EasyMarkdown 是一个单文件的 Markdown 编辑器，草稿保存在当前浏览器。
+
+## 快捷键
+
+| 快捷键 | 操作 |
+| --- | --- |
+| `Ctrl + P` | 命令面板 |
+| `Ctrl + S` | 保存草稿 |
+| `Ctrl + B` | 加粗 |
+| `Ctrl + K` | 插入链接 |
+| `Ctrl + F` | 查找 |
+
+- [x] 打开一个文档
+- [x] 修改一段文字
+- [ ] 切换一次深色主题
+- [ ] 导出 HTML
+
+## 示例
+
+```js
+function greet(name) {
+  return `你好，${name}。`;
+}
+
+console.log(greet('EasyMarkdown'));
+```
+
+> [!NOTE]
+> 分享文章用「导出」→「导出 HTML」；分享编辑器就发这个 HTML 文件。
+
+## 功能
+
+- 文件树、标签页、大纲、命令面板
+- 分屏 / 仅编辑 / 仅预览
+- 深浅主题、正文字号
+- 任务清单、代码高亮、表格、提示块
+- Mermaid 流程图 / 时序图 / 甘特图
+- 导出 HTML / PDF / Markdown
+- 图片粘贴与拖入，正文只保留 `assets/img-xxx.png`
+
+---
+
+EasyMarkdown 0.4 · 本地草稿
+</script>
+
+<script type="text/markdown" id="demo-syntax" data-name="Markdown 语法速查.md">
+# Markdown 语法速查
+
+常用语法一页看完，右侧预览就是最终效果。
+
+## 标题
+
+```markdown
+# 一级标题
+## 二级标题
+### 三级标题
+```
+
+## 强调
+
+**加粗**、*斜体*、~~删除线~~、`行内代码`
+
+## 列表
+
+- 无序列表
+  - 嵌套一层
+  - 再一层
+- 第二项
+
+1. 有序列表
+2. 第二项
+3. 第三项
+
+## 任务清单
+
+- [x] 已完成
+- [ ] 待办
+
+## 链接
+
+[EasyMarkdown](https://example.com) · `[文字](https://链接)`
+
+## 引用
+
+> 这是一段引用。
+> 可以换行继续。
+
+> [!NOTE]
+> 支持 GitHub 风格的提示块。
+
+## 代码
+
+```python
+def fib(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+```
+
+## 表格
+
+| 语法 | 作用 |
+| --- | --- |
+| `#` | 标题 |
+| `**` | 加粗 |
+| `-` | 列表 |
+| `>` | 引用 |
+
+## 分割线
+
+---
+</script>
+
+<script type="text/markdown" id="demo-thoughts" data-name="产品随想.md">
+# 关于写作工具的一点随想
+
+## 一、工具应该退到文字后面
+
+好的写作工具，应该让人忘记工具本身。打开就能写，写完就能走，不要求登录，不提示升级，不把菜单塞满屏幕。
+
+我想要的其实很简单：一张干净的纸，一支顺手的笔。
+
+## 二、为什么是 Markdown
+
+Markdown 的好处不是"简单"，而是**可迁移**。
+
+它只是纯文本。十年后，任何编辑器都还能打开它；换一个平台，格式也不会丢。这种确定性，比任何花哨的功能都重要。
+
+### 纯文本的长期主义
+
+我们保存的不是某个软件的私有格式，而是一份可以一直被读懂的文本。
+
+### 不绑定的自由
+
+写作应该属于写作者，而不是某个账号、某个订阅、某个云服务。
+
+## 三、单文件的可能性
+
+把整个编辑器打包成一个 HTML 文件，是一个有点浪漫的想法：
+
+- 不需要安装，双击就能打开
+- 发给别人，对方不用配置任何环境
+- 断网也能写
+- 你的数据只留在自己的浏览器里
+
+> [!WARNING]
+> 单文件也有限制：没有云同步、没有版本历史、超大文档会变慢。它适合轻量写作，不适合作为知识库。
+
+## 四、接下来
+
+先把"打开就能写"这件事做好，再谈其他。
+
+写作的仪式感，应该来自文字本身，而不是工具。
+
+---
+
+*2026 年 11 月，于一个安静的晚上*
+</script>
+
+<script type="text/markdown" id="demo-diagrams" data-name="流程图与图表.md">
+# 流程图与图表
+
+Mermaid 代码块会直接渲染成图表。修改代码，右侧会重新绘制。
+
+## 流程图
+
+```mermaid
+flowchart LR
+  A[打开文档] --> B{需要预览?}
+  B -->|是| C[分屏模式]
+  B -->|否| D[仅编辑]
+  C --> E[导出 HTML]
+  D --> E
+```
+
+## 时序图
+
+```mermaid
+sequenceDiagram
+  participant U as 用户
+  participant E as EasyMarkdown
+  participant B as 浏览器
+  U->>E: 输入 Markdown
+  E->>B: 实时渲染
+  B-->>U: 更新预览
+```
+
+## 甘特图
+
+```mermaid
+gantt
+  title 文档撰写计划
+  dateFormat YYYY-MM-DD
+  section 初稿
+  收集资料 :a1, 2026-11-01, 3d
+  撰写正文 :a2, after a1, 5d
+  section 修订
+  校对 :a3, after a2, 2d
+```
+
+> [!TIP]
+> 点击工具栏的流程图按钮，可以插入一个 Mermaid 模板。
+</script>
+
+<script type="text/markdown" id="demo-meeting" data-name="会议记录.md">
+# 产品讨论 · 11 月 12 日
+
+**参会**：产品、设计、前端  
+**议题**：确定第一版编辑器的范围
+
+## 结论
+
+| 事项 | 负责人 | 时间 |
+| --- | --- | --- |
+| 交互原型 | 我 | 本周五 |
+| 视觉规范 | 设计 | 下周一 |
+| 性能测试 | 前端 | 下周三 |
+
+## 待办
+
+- [x] 确认目标用户
+- [x] 收敛第一版功能
+- [ ] 完成单文件原型
+- [ ] 收集 5 位同事的反馈
+
+> [!IMPORTANT]
+> 第一版不做云同步，先把"打开就能写"这件事做好。
+
+## 讨论摘要
+
+用户最在意的不是功能多少，而是**打开速度**和**中文排版**。如果第一次打开要等三秒，后面做得再好也很难留住人。
+
+设计补充：预览区域的阅读宽度控制在 760–820px，行高不低于 1.8。
+</script>
+
+<script type="text/markdown" id="demo-ideas" data-name="灵感碎片.md">
+# 灵感碎片
+
+随手记下的一些点子和句子。
+
+## 界面
+
+- 侧栏像书脊，安静地待在左边
+- 预览像一张摊开的纸，有轻微阴影
+- 主题切换不要闪烁
+
+## 交互
+
+- 命令面板比菜单更接近"想到就做"
+- 保存应该是隐形的，不需要用户惦记
+- 删除要有确认，但不要吓人
+
+## 句子
+
+> 慢一点写，快一点想。
+
+> 工具的价值，是让人把注意力留给内容。
+
+## 待验证
+
+1. 单文件在 2 万字的文档下是否还流畅？
+2. 手机浏览器上的编辑体验能否接受？
+3. 图片内嵌会不会让 HTML 变得太大？
+</script>
+
+<script type="text/markdown" id="demo-design" data-name="设计规范.md">
+# EasyMarkdown · 设计规范
+
+## 色彩
+
+| 名称 | 色值 | 用途 |
+| --- | --- | --- |
+| 背景 | `#050A12` | 工作区 |
+| 面板 | `#0A1420` | 编辑器 / 文档卡 |
+| 正文 | `#F2F7F5` | 主文字 |
+| 霓虹绿 | `#3EF07C` | 交互与强调 |
+| 边框 | `rgba(120,255,170,.10)` | 分隔线 |
+
+## 字体
+
+- 界面：Inter / 微软雅黑
+- 正文：系统无衬线字体
+- 代码：Cascadia Code / Consolas
+
+## 间距
+
+4px 网格。正文行高 **1.75**，段落间距 **12px**，阅读宽度 **760px**。控件圆角 **10px**，文档卡圆角 **16px**。
+
+## 动效
+
+- 悬停 / 按下：140ms
+- 菜单 / 弹层：180ms
+- 统一缓动：`cubic-bezier(0.22, 1, 0.36, 1)`
+
+```css
+:root {
+  --bg: #050a12;
+  --surface: #0a1420;
+  --text: #f2f7f5;
+  --accent: #3ef07c;
+}
+```
+</script>
+
+<script type="text/markdown" id="demo-release" data-name="发布说明.md">
+# 发布说明
+
+## 0.5.0 · 2026-11-13
+
+预览里直接改，GitHub 更新提醒。
+
+### 新增
+
+- 预览编辑模式：在渲染结果里直接改段落和标题
+- 表格、代码块、Mermaid 图双击就地改 Markdown 源码
+- 启动时检查 GitHub Releases，有新版本可在应用内下载安装
+- 预览页在只读 / 编辑模式下放宽到 1120px
+
+### 保留
+
+- 真实文件夹工作区与磁盘写回
+- 文件树 / 标签页 / 自动保存 / 大纲 / 命令面板
+- Mermaid 图表、导出 HTML、打印为 PDF
+
+### 已知限制
+
+- 预览编辑以块为单位回写；复杂块打开的是源码
+- 外部修改不会实时推送，使用「刷新工作区」
+- 单文件超过 2MB 不会自动载入
+- 不支持 GBK 编码的外部文件
+</script>
+
+<script>/*__MERMAID__*/</script>
+<script>/*__VENDOR__*/</script>
+<script>/*__APP__*/</script>
+</body>
+</html>
